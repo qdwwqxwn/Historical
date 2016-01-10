@@ -102,6 +102,8 @@ for ( i in 1:length(top15) )  {
   tindex = tindex + anom * pop / 1000000    
 } 
 
+# do monthly mean
+tmonthly=aggregate(tindex, as.yearmon, mean)
 
 
 
