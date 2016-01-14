@@ -1,28 +1,46 @@
 library(zoo)
 
-stock=read.zoo("SP500/quantquote_daily_sp500_83986/daily/table_dov.csv", index=1, format="%Y%m%d", sep=',')
-colnames(stock)=c("time", "Open", "High", "Low", "Close", "Volume")
+# function to read sp500 daily stock prices given a ticker, 
+# and retrun a monthly time series as a zoo object 
+ 
+read_sp500 <- function (ticker) { 
+  filename = paste("SP500/quantquote_daily_sp500_83986/daily/table_", 
+                   tolower(ticker),  ".csv", sep="")
 
-# get monthly mean
-stock_monthly = aggregate(stock, as.yearmon, mean)
+  stock=read.zoo(filename, index=1, format="%Y%m%d", sep=',')
+  colnames(stock)=c("time", "Open", "High", "Low", "Close", "Volume")
 
-# test time series analysis
-tom=as.ts(stock_monthly$Open) 
+  # get monthly mean
+  stock_monthly = aggregate(stock, as.yearmon, mean)
 
-# regular decomposition
-dtom=decompose(tom)
-plot(dtom)
+}
+
+# function to compute SNR between seasonal and random
+# Input: ticker of a SP500 stock 
+# Oputput: ratio, with STL decomposition
+
+compute_SNR <- function (ticker) { 
+   stock_monthly = read_sp500(ticker) 
+
+   # convert to time series 
+   tom=as.ts(stock_monthly$Open) 
+
+   # regular decomposition
+   #  dtom=decompose(tom)
+   #  plot(dtom)
 
 # STL decomposition,  plotted in a separate window
 # one difference is STL returns the components of the same length
 # as the original time series
-stom=stl(tom, t.window=15, s.window="periodic", robust=TRUE)
-dev.new()
-plot(stom)
+   stom=stl(tom, t.window=15, s.window="periodic", robust=TRUE)
 
-#verify the components
-# mts=stom$time.series
-# mts[, 'trend']+mts[, 'seasonal']+mts[, 'remainder'] - tom
+#dev.new()
+#plot(stom)
+
+  mts=stom$time.series
+  sd(mts[, 'seasonal']) / sd(mts[, 'remainder']) 
+
+}
 
 
 
