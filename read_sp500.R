@@ -32,13 +32,17 @@ compute_SNR <- function (ticker) {
 # STL decomposition,  plotted in a separate window
 # one difference is STL returns the components of the same length
 # as the original time series
-   stom=stl(tom, t.window=15, s.window="periodic", robust=TRUE)
+   if (length(tom) > 12*3 ) { # only do it if more than three years of data
+     stom=stl(tom, t.window=15, s.window="periodic", robust=TRUE)
 
-#dev.new()
-#plot(stom)
+     #dev.new()
+     #plot(stom)
 
-  mts=stom$time.series
-  sd(mts[, 'seasonal']) / sd(mts[, 'remainder']) 
+     mts=stom$time.series
+     sd(mts[, 'seasonal']) / sd(mts[, 'remainder']) 
+   } else {  # return NA for too-short data
+     NA
+   }
 
 }
 
