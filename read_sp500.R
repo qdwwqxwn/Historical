@@ -17,13 +17,14 @@ read_sp500 <- function (ticker) {
 
 # function to compute SNR between seasonal and random
 # Input: ticker of a SP500 stock 
-# Oputput: ratio, with STL decomposition
+# Oputput: c(ratio, datalen), with STL decomposition
+# datalen is the number of months in the data 
 
 compute_SNR <- function (ticker) { 
    stock_monthly = read_sp500(ticker) 
 
-   # convert to time series 
-   tom=as.ts(stock_monthly$Open) 
+   # convert to time series, fill NA values  
+   tom=na.approx( as.ts(stock_monthly$Open) ) 
 
    # regular decomposition
    #  dtom=decompose(tom)
@@ -32,16 +33,17 @@ compute_SNR <- function (ticker) {
 # STL decomposition,  plotted in a separate window
 # one difference is STL returns the components of the same length
 # as the original time series
-   if (length(tom) > 12*3 ) { # only do it if more than three years of data
+   datalen = length(tom) 
+   if (datalen > 12*3 ) { # only do it if more than three years of data
      stom=stl(tom, t.window=15, s.window="periodic", robust=TRUE)
 
      #dev.new()
      #plot(stom)
 
      mts=stom$time.series
-     sd(mts[, 'seasonal']) / sd(mts[, 'remainder']) 
+     list( SNR= sd(mts[, 'seasonal']) / sd(mts[, 'remainder']), datalen=datalen)  
    } else {  # return NA for too-short data
-     NA
+     list(SNR=NA, datalen=datalen) 
    }
 
 }
