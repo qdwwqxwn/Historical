@@ -1,37 +1,50 @@
 library(zoo)
+library(xts) 
 
 # function to read sp500 daily stock prices given a ticker, 
-# and retrun a monthly time series as a zoo object 
+# and retrun a daily|weekly|monthly time series as a zoo object 
+# Input: 
+# ticker: string 
+# frequency: 'daily'|'weekly'|'monthly' 
  
-read_sp500 <- function (ticker) { 
+read_sp500 <- function (ticker, frequency) { 
   filename = paste("SP500/quantquote_daily_sp500_83986/daily/table_", 
                    tolower(ticker),  ".csv", sep="")
 
   stock=read.zoo(filename, index=1, format="%Y%m%d", sep=',')
   colnames(stock)=c("time", "Open", "High", "Low", "Close", "Volume")
+ 
+  if (frequency == 'daily') { 
+    return(stock) 
+  } else if (frequency == 'weekly') { 
+    return(apply.weekly(stock, mean)) 
+  } else if (frequency == 'monthly') { 
+    return (aggregate(stock, as.yearmon, mean)) 
+    # or  return(apply.monthly(stock,  mean))
+  } else  { 
+    return(NA)
+  } 
+}
 
-  # get monthly mean
-  stock_monthly = aggregate(stock, as.yearmon, mean)
+
+# function to plot raw Open data
+# Input: 
+# type: 'Open'|'High'|'Low'|'Close'|'Volume'
+# frequency: 'daily'|'weekly'|'monthly' 
+
+plot_stock <- function (ticker, type, frequency) { 
+
+  stock = read_sp500(ticker, frequency) 
+  plot(stock[, type])
 
 }
 
 
-# function to plot raw monthly Open data
-
-plot_monthly <- function (ticker) { 
-
-  # get monthly mean
-  stock_monthly = read_sp500(ticker) 
-  plot(stock_monthly$Open)
-
-}
-
-
-plot_components <- function(ticker) { 
-  # get monthly mean
-  stock_monthly = read_sp500(ticker) 
+# Only weeks with monthly data for now
+plot_components <- function(ticker, type) { 
+  stock = read_sp500(ticker, 'monthly') 
    # convert to time series, fill NA values  
-  tom=na.approx( as.ts(stock_monthly$Open) ) 
+  tom=na.approx( as.ts(stock[, type] ) ) 
   stom=stl(tom, t.window=15, s.window="periodic", robust=TRUE)
   cycle=stom$time.series[, 'seasonal']
   noise=stom$time.series[, 'remainder']
@@ -51,18 +64,19 @@ plot_components <- function(ticker) {
 }
 
 # return STL decomposition ouput, mainly for testing purposes 
-get_stl <- function (ticker) { 
-  stock_monthly = read_sp500(ticker) 
+get_stl <- function (ticker, type) { 
+  stock_monthly = read_sp500(ticker,'monthly') 
    # convert to time series, fill NA values  
-  tom=na.approx( as.ts(stock_monthly$Open) ) 
+  tom=na.approx( as.ts(stock_monthly[, type]) ) 
   stom=stl(tom, t.window=15, s.window="periodic", robust=TRUE)
 }
 
-compute_SNR <- function (ticker) { 
-   stock_monthly = read_sp500(ticker) 
+# only for monthly, for now 
+compute_SNR <- function (ticker, type) { 
+   stock_monthly = read_sp500(ticker, 'monthly') 
 
    # convert to time series, fill NA values  
-   tom=na.approx( as.ts(stock_monthly$Open) ) 
+   tom=na.approx( as.ts(stock_monthly[, type]) ) 
 
 # STL decomposition,  plotted in a separate window
 # one difference is STL returns the components of the same length
