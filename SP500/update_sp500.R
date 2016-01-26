@@ -19,14 +19,19 @@ nfiles = length(files)
 for (i in 1:length(files) ) { 
 
   ticker = sub(".csv$", "", sub("^table_", "", files[i]))
-  cat("Doing ", toupper(ticker), "\n")  
+  #cat("Doing ", toupper(ticker), "\n")  
   data=NULL
-  try( data <- getSymbols(toupper(ticker), auto.assign=FALSE) )  
-  if ( !is.null(data) ) { 
-    write.zoo( data, paste(dir, "/", files[i], sep=''), sep=',') 
+  try( data <- getSymbols(toupper(ticker), src='yahoo', auto.assign=FALSE) )  
+  if ( is.null(data) ) { # try a different source
+    try( data <- getSymbols(toupper(ticker), src='google', auto.assign=FALSE) )  
+    if ( is.null(data) ) { # try a different source
+      cat("Doing ", toupper(ticker), " failed \n")  
+    } else { 
+      write.zoo( data, paste(dir, "/", files[i], sep=''), sep=',') 
+    }
   } else {   # only save valid data
-    cat("Doing ", toupper(ticker), " failed \n")  
+    write.zoo( data, paste(dir, "/", files[i], sep=''), sep=',') 
   }
 
-} 
+}  #for 
   
