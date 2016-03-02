@@ -1,4 +1,7 @@
 
+#Get population weighted temperature anomalies as "unconformatbility index."
+# Treat cold and hot indecies separately. 
+
 library(zoo) 
 
 
@@ -94,16 +97,22 @@ ltop15 = c("New York city, New York",
 
 cities = get_cities() # get all the cities' pop 
 
-tindex = 0 
+ptindex = 0 
+ntindex = 0 
 for ( i in 1:length(top15) )  { 
   temp = get_city_temp( top15[i] ) 
-  anom = temp$anom
+  panom = temp$anom
+  nanom = temp$anom
+  panom[panom <0] = 0   # hot anomalies only
+  nanom[nanom >0] = 0   # cold  anomalies only
   pop = subset(cities, City==ltop15[i])$Pop 
-  tindex = tindex + anom * pop / 1000000    
+  ptindex = ptindex + panom * pop / 1000000    
+  ntindex = ntindex + nanom * pop / 1000000    
 } 
 
 # do monthly mean
-tmonthly=aggregate(tindex, as.yearmon, mean)
+ptmonthly=aggregate(ptindex, as.yearmon, mean)
+ntmonthly=aggregate(ntindex, as.yearmon, mean)
 
 
 
