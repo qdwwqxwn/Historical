@@ -110,9 +110,35 @@ for ( i in 1:length(top15) )  {
   ntindex = ntindex + nanom * pop / 1000000    
 } 
 
+two_index_daily = merge(ptindex, ntindex)
+write.zoo(round(two_index_daily, 3), sep=',', 
+          file="/data/www/free/cold_hot_index/v1/daily.csv", 
+          col.names=c("Date", "hot_index", "cold_index")) 
+
 # do monthly mean
 ptmonthly=aggregate(ptindex, as.yearmon, mean)
 ntmonthly=aggregate(ntindex, as.yearmon, mean)
+two_index_monthly = merge(ptmonthly, ntmonthly)
+write.zoo(round(two_index_monthly, 3), sep=',', 
+          file="/data/www/free/cold_hot_index/v1/monthly.csv", 
+          col.names=c("Date", "hot_index", "cold_index")) 
+
+# plot the monthly data 
+ pnl.xyarea <- function(x, y, fill.base = 0, col = 1, ...) {
+         lines(x, y, ...)
+         panel.number <- parent.frame()$panel.number
+         col <- rep(col, length = panel.number)[panel.number]
+         polygon(c(x[1], x, tail(x, 1), x[1]),
+          c(fill.base, as.numeric(y), fill.base, fill.base), col = col)
+  }
+
+# dev.new(width=8, height=4)
+ png("/data/www/free/cold_hot_index/v1/monthly.png", width=800, height=400) 
+ plot(two_index_monthly, col=c('red', 'blue'), panel=pnl.xyarea, 
+      main='CONUS Monthly Hot and Cold Uncomfortability Index (HCUI)',
+      ylab=c('Hot', 'Cold'), xlab='Date', cex.main=2.0, cex=1.5, 
+      cex.axis=1.5, cex.lab=2.5)
+ dev.off() 
 
 
 
